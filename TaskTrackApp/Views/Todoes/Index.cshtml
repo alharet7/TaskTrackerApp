@@ -1,0 +1,47 @@
+﻿@model IEnumerable<TaskTrackerApp.Models.Todo>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.TaskTodoName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.TaskTodoDescription)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.TaskTodoDate)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.TaskTodoName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TaskTodoDescription)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TaskTodoDate)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.TaskTodoId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.TaskTodoId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.TaskTodoId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
