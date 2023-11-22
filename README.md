@@ -43,6 +43,10 @@ https://github.com/alharet7/TaskTrackerApp
 - Create, update, and delete tasks to streamline your workflow.
 
 ## Notifications
-**SweetAlert**: SweetAlert is used to provide user-friendly notifications for various actions. For example:
-When a task is successfully created, updated, or deleted.
+
+- **SweetAlert** for Deletion: SweetAlert is used to provide user-friendly notifications specifically for task deletion.
+When a task is successfully deleted.
+In case of errors or failed task deletion operations.
+- **Toastr** for Other Actions: Toastr is employed for notifications on other actions.
+Successful creation, update, or general notifications.
 In case of errors or failed operations.
