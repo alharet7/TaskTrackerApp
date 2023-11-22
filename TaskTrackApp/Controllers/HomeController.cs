@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using TaskTrackerApp.Models;
+using TaskTrackerApp.Models.Interfaces;
 
 namespace TaskTrackerApp.Controllers
 {
@@ -15,7 +16,7 @@ namespace TaskTrackerApp.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            return View("~/Views/Todoes/Index.cshtml");
         }
 
         public IActionResult Privacy()
