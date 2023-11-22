@@ -6,41 +6,44 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using TaskTrackerApp.Models;
+using TaskTrackerApp.Models.Services;
 using TaskTracker.Data;
+using TaskTrackerApp.Models.Interfaces;
+using Microsoft.AspNetCore.Hosting;
 
 namespace TaskTrackerApp.Controllers
 {
     public class TodoesController : Controller
     {
-        private readonly TaskTrackerDbContext _context;
 
-        public TodoesController(TaskTrackerDbContext context)
+        private readonly ITodo _todo;
+        public TodoesController(ITodo context)
         {
-            _context = context;
+            _todo = context;
         }
 
         // GET: Todoes
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Todos.ToListAsync());
+            var returnLsitTasks = await _todo.GetAllTasks();
+            return View(returnLsitTasks);
         }
 
         // GET: Todoes/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(int id)
         {
-            if (id == null)
+            if (id == null || await _todo.GetAllTasks() == null)
             {
                 return NotFound();
             }
 
-            var todo = await _context.Todos
-                .FirstOrDefaultAsync(m => m.TaskTodoId == id);
-            if (todo == null)
+            var taskDetails = await _todo.GetTaskById(id);
+            if (taskDetails == null)
             {
                 return NotFound();
             }
 
-            return View(todo);
+            return View(taskDetails);
         }
 
         // GET: Todoes/Create
@@ -58,22 +61,32 @@ namespace TaskTrackerApp.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(todo);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    await _todo.CreateNewTask(todo);
+                    TempData["success"] = "Task added successfully";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    // Log the exception if needed
+                    TempData["error"] = "An error occurred while adding the Task";
+                    return View(todo);
+                }
             }
+
             return View(todo);
         }
 
         // GET: Todoes/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<IActionResult> Edit(int Id)
         {
-            if (id == null)
+            if (Id == null)
             {
                 return NotFound();
             }
 
-            var todo = await _context.Todos.FindAsync(id);
+            var todo = await _todo.GetTaskById(Id);
             if (todo == null)
             {
                 return NotFound();
@@ -82,13 +95,11 @@ namespace TaskTrackerApp.Controllers
         }
 
         // POST: Todoes/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("TaskTodoId,TaskTodoName,TaskTodoDescription,TaskTodoDate")] Todo todo)
+        public async Task<IActionResult> Edit(int TaskTodoId, [Bind("TaskTodoId,TaskTodoName,TaskTodoDescription,TaskTodoDate")] Todo todo)
         {
-            if (id != todo.TaskTodoId)
+            if (TaskTodoId != todo.TaskTodoId)
             {
                 return NotFound();
             }
@@ -97,61 +108,65 @@ namespace TaskTrackerApp.Controllers
             {
                 try
                 {
-                    _context.Update(todo);
-                    await _context.SaveChangesAsync();
+                    await _todo.UpdateTask(TaskTodoId, todo);
+                    TempData["success"] = "Task updated successfully";
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!TodoExists(todo.TaskTodoId))
+                    if (await TodoExists(todo.TaskTodoId) == false)
                     {
                         return NotFound();
                     }
                     else
                     {
-                        throw;
+                        TempData["error"] = "An error occurred while updating the Task";
+                        return View(todo);
                     }
                 }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(todo);
-        }
-
-        // GET: Todoes/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var todo = await _context.Todos
-                .FirstOrDefaultAsync(m => m.TaskTodoId == id);
-            if (todo == null)
-            {
-                return NotFound();
+                catch (Exception ex)
+                {
+                    // Log the exception if needed
+                    TempData["error"] = "An unexpected error occurred while updating the Task";
+                    return View(todo);
+                }
             }
 
             return View(todo);
         }
 
-        // POST: Todoes/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        private async Task<bool> TodoExists(int id)
         {
-            var todo = await _context.Todos.FindAsync(id);
-            if (todo != null)
+            if (await _todo.GetTaskById(id) == null)
             {
-                _context.Todos.Remove(todo);
+                return false;
+            }
+            return true;
+        }
+
+        #region API CALLS
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            List<Todo> todoList = await _todo.GetAllTasks();
+            return Json(new { data = todoList });
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var taskToBeDeleted = await _todo.GetTaskById(id);
+
+            if (taskToBeDeleted == null)
+            {
+                return Json(new { success = false, message = "Error while deleting" });
             }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            _todo.DeleteTask(id);
+
+            return Json(new { success = true, message = "Delete Successful" });
         }
 
-        private bool TodoExists(int id)
-        {
-            return _context.Todos.Any(e => e.TaskTodoId == id);
-        }
+        #endregion
     }
 }
