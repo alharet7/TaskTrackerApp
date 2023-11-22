@@ -13,6 +13,7 @@ Tasktracker is a straightforward task management application built on ASP.NET MV
 ## Technologies Used
 
 - **ASP.NET MVC:** The application is built on the robust ASP.NET MVC framework for efficient web development.
+- **SQL Server:** The application uses SQL Server as the management system for database operations.
 - **JQuery:** Employed JQuery to simplify DOM manipulation and enhance client-side scripting.
 - **Ajax:** Integrated Ajax for seamless and dynamic data retrieval, creating a smoother user experience.
 - **SweetAlert:** Utilized SweetAlert for user-friendly notifications.
